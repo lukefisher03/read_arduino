@@ -1,4 +1,5 @@
 # Read Pressure Sensor Data from Arduino
+requires Python 3.10 or higher
 
 ## Arduino Setup
 The only thing required is that the serial output from the Arduino is formatted as such:
