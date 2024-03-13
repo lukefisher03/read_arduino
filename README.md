@@ -43,6 +43,26 @@ the main menu. This will prompt you for a recording time length and then will be
 This mode simply records the output from the serial port to a file and displays it live in the terminal. This would be useful for exporting data to another program like Excel. A 
 sample output file csv is shown in the `output` directory. To end the file writing and output simply hit `Ctrl + C`
 
+### Changing Settings
+Modifiable settings:
+1. ANIMATION_LENGTH
+2. Y_AXIS_MIN
+3. Y_AXIS_MAX
+
+#### Animation Length
+For live plotting the x-axis does not resize. So once the time values surpass the highest value on the x-axis, it will go out of view. This
+variable adjusts how big the window of visible x-values there are. 
+
+#### Y Axis Minimum
+This sets the minimum y-axis value.
+
+#### Y Axis Maximum
+This sets the maximum y-axis value.
+
+#### Where to change these settings
+These settings are found in `read_data.py`. Below is a screenshot with the default values.
+![](assets/settings.png)
+
 ## Sample selections
 Here's a sample of menu options you might choose
 ![](assets/menu_selection.png)
