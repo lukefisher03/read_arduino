@@ -2,15 +2,18 @@ import matplotlib.pyplot as plt
 import serial
 import serial.tools.list_ports
 import matplotlib.animation as animation
-import time
-import matplotlib
-# matplotlib.use('Qt5Agg')
+from functools import partial
 
 SER = serial.Serial()
 SERIAL_PORTS = []
 ACTIVE_SERIAL_PORT = ""
+ANIMATION_LENGTH = 25  # In seconds
+Y_AXIS_MIN = 13
+Y_AXIS_MAX = 23
+PAUSED = False
 
-def init():
+
+def init_serial():
     # Detect OS
     print("Initalizing serial port configuration")
     print("Please select the serial port you would like to listen to: ")
@@ -19,7 +22,7 @@ def init():
     # list serial ports
     for i, port in enumerate(SERIAL_PORTS):
         print(f"\t{i + 1}. {port}")
-    
+
     ACTIVE_SERIAL_PORT = SERIAL_PORTS[int(input(":")) - 1].device
 
     SER.port = ACTIVE_SERIAL_PORT
@@ -34,33 +37,20 @@ def init():
     # Read a sample line of the serial port to ensure the connection is established
     print(f"Sample line: {SER.readline().decode()}")
     print("Successfully opened, connected, and read serial port!")
+    SER.close()
+    print("Closed port!")
+
 
 def show_menu():
     print("Welcome, please select an option: ")
     print("0. Exit")
     print("1. Start live plot")
+    print("2. Record plot")
     return int(input(": "))
-
-def init_plot():
-    plot_line.set_data([], [])
-    return plot_line,
-
-def update_plot(i, times, pressures, ser):
-    p, t = ser.readline().decode().strip().split(",")
-    print([float(p),int(t)])
-    pressures.append(float(p))
-    times.append(int(t) / 1000)
-
-    ax.clear()
-    plt.title("Pressure x Time")
-    ax.grid()
-    ax.set_ylabel("pressure (psi)")
-    ax.set_xlabel("time (seconds)")
-    ax.plot(times, pressures)
 
 
 if __name__ == "__main__":
-    init()
+    init_serial()
     menu_selection = show_menu()
     # Run infinitely
     while True:
@@ -70,31 +60,70 @@ if __name__ == "__main__":
                 SER.close()
                 print("Shutting down . . .")
                 break
-            case 1: 
-                times = []
-                pressures = []
+            case 1:
+                print(f"Opening port {ACTIVE_SERIAL_PORT}")
+                SER.open()
+                print("Reading line . . .")
+                print(SER.readline().decode().strip().split(","))
+                PAUSED = False
                 print("Starting live plot!")
-                fig = plt.figure()
-                ax = plt.axes()
-                plot_line, = ax.plot([], [], lw=0.5)
-                ax.grid()
-                paused = False
+                fig, ax = plt.subplots()
+                (plot_line,) = ax.plot([], [], lw=0.5)
 
-                def toggle_pause(i):
-                    if paused:
-                        anim.resume()
-                    else:
+                def plot_init():
+                    _, t = SER.readline().decode().strip().split(",")
+                    ax.set_xlim((int(t) // 1000, (int(t) // 1000) + ANIMATION_LENGTH))
+                    ax.set_ylim((Y_AXIS_MIN, Y_AXIS_MAX))
+                    ax.grid()
+                    return (plot_line,)
+
+                def update_plot(_, ln, x, y):
+                    p, t = SER.readline().decode().strip().split(",")
+                    print([float(p), int(t)])
+                    x.append(int(t) / 1000)
+                    y.append(float(p))
+
+                    ln.set_data(x, y)
+                    return (ln,)
+
+                def toggle_pause(e):
+                    global PAUSED
+                    if not PAUSED:
                         anim.pause()
-                    paused = not paused
+                        PAUSED = True
+                    else:
+                        anim.resume()
+                        PAUSED = False
 
-                anim = animation.FuncAnimation(fig, update_plot, fargs=(times, pressures, SER), init_func=init_plot, frames=500, interval=10)
-                
-                fig.canvas.mpl_connect('button_press_event', toggle_pause)
+                anim = animation.FuncAnimation(
+                    fig,
+                    partial(update_plot, ln=plot_line, x=[], y=[]),
+                    init_func=plot_init,
+                    blit=True,
+                    frames=500,
+                    interval=20,
+                )
+
+                fig.canvas.mpl_connect("key_press_event", toggle_pause)
                 plt.show()
+                SER.close()
                 # anim.save(f"live_plot_{int(time.time())}")
+            case 2:
+                # take a timed screenshot
+                limit = int(input("How many seconds do you want to record?\n : "))
+                t = 0
+                x, y = [], []
+                SER.open()
+                while float(t) < (limit * 1000):
+                    p, t = SER.readline().decode().strip().split(",")
+                    y.append(float(p))
+                    x.append((float(t)) / 1000)
+                    print(f"Time: {x[-1]}m, Pressure: {y[-1]}")
+
+                fig, ax = plt.subplots()
+                (plot_line,) = ax.plot(x, y, lw=0.5)
+                ax.grid()
+                plt.show()
+                SER.close()
 
         menu_selection = show_menu()
-
-
-
-
