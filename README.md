@@ -48,6 +48,9 @@ Modifiable settings:
 1. ANIMATION_LENGTH
 2. Y_AXIS_MIN
 3. Y_AXIS_MAX
+4. Y_AXIS_LABEL
+5. X_AXIS_LABEL
+6. PLOT_TITLE
 
 #### Animation Length
 For live plotting the x-axis does not resize. So once the time values surpass the highest value on the x-axis, it will go out of view. This
@@ -58,6 +61,9 @@ This sets the minimum y-axis value.
 
 #### Y Axis Maximum
 This sets the maximum y-axis value.
+
+### Labels and Plot Title
+Set the labels for each axis and the title displayed above the plot.
 
 #### Where to change these settings
 These settings are found in `read_data.py`. Below is a screenshot with the default values.

@@ -8,11 +8,18 @@ import os
 
 SER = serial.Serial()
 SERIAL_PORTS = []
+PAUSED = False
 ACTIVE_SERIAL_PORT = ""
+
+## You can edit thses
+
 ANIMATION_LENGTH = 25  # In seconds
 Y_AXIS_MIN = 13
 Y_AXIS_MAX = 23
-PAUSED = False
+Y_AXIS_LABEL = "pressure (psi)"
+X_AXIS_LABEL = "time (s)"
+PLOT_TITLE = "Pressure x Time"
+
 
 
 def init_serial():
@@ -77,6 +84,9 @@ if __name__ == "__main__":
                     _, t = SER.readline().decode().strip().split(",")
                     ax.set_xlim((int(t) // 1000, (int(t) // 1000) + ANIMATION_LENGTH))
                     ax.set_ylim((Y_AXIS_MIN, Y_AXIS_MAX))
+                    ax.set_xlabel(X_AXIS_LABEL)
+                    ax.set_ylabel(Y_AXIS_LABEL)
+                    plt.title(PLOT_TITLE)
                     ax.grid()
                     return (plot_line,)
 
@@ -136,7 +146,7 @@ if __name__ == "__main__":
                     f.writelines("time(ms),pressure(psi)\n")
                     while True:
                         p, t = SER.readline().decode().strip().split(",")
-                        l = f"{t},{p}"
+                        l = f"{p},{t}"
                         print(l)
                         f.writelines(l + "\n")
         menu_selection = show_menu()
