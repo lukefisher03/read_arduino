@@ -1,8 +1,10 @@
 import matplotlib.pyplot as plt
 import serial
+import time
 import serial.tools.list_ports
 import matplotlib.animation as animation
 from functools import partial
+import os
 
 SER = serial.Serial()
 SERIAL_PORTS = []
@@ -46,6 +48,7 @@ def show_menu():
     print("0. Exit")
     print("1. Start live plot")
     print("2. Record plot")
+    print("3. Write serial output to file")
     return int(input(": "))
 
 
@@ -126,4 +129,15 @@ if __name__ == "__main__":
                 plt.show()
                 SER.close()
 
+            case 3:
+                SER.open()
+                os.makedirs("output", exist_ok=True)
+                with open(os.path.join("output",f"output_log_{int(time.time())}.csv"), "w+") as f:
+                    f.writelines("time(ms),pressure(psi)\n")
+                    while True:
+                        p, t = SER.readline().decode().strip().split(",")
+                        l = f"{t},{p}"
+                        print(l)
+                        f.writelines(l + "\n")
         menu_selection = show_menu()
+            
